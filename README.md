@@ -1,4 +1,6 @@
 smite-db-mongoose
 =================
 
-Smite db integration using mongoose
+_Smite database integration using mongoose_
+
+Abstracts database using SMITE.db commands
