@@ -1,0 +1,20 @@
+{
+  "name": "smite-db-mongoose",
+  "version": "0.0.1",
+  "main": "src/smiteDBMongoose.coffee",
+  "description": "Smite database integration using mongoose ",
+  "homepage": "http://github.com/evanmoran/smite-db-mongoose/",
+  "keywords": [
+    "smite",
+    "database",
+    "mongoose"
+  ],
+  "author": "Evan Moran <evan@evanmoran.com>",
+  "dependencies": {
+    "mongoose": "~2.6.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/evanmoran/smite-db-mongoose.git"
+  }
+}
