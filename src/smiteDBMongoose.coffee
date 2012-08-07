@@ -15,6 +15,14 @@ module.exports = SMITEDB = {}
 SMITEDB.models = {}
 SMITEDB.schemas = {}
 
+
+#──────────────────────────────────────────────────────
+# Use
+#──────────────────────────────────────────────────────
+
+SMITEDB.use = (SMITE) ->
+  SMITE.db = SMITEDB
+
 #──────────────────────────────────────────────────────
 # SMITE.db.settings
 #──────────────────────────────────────────────────────
@@ -59,6 +67,9 @@ _mapMap = (map, fn) ->
       out[k] = result
   out
 
+_isSMITEModelType = (any) ->
+  any._modelArgs? and any._modelName?
+
 #──────────────────────────────────────────────────────
 # SMITE.db.connect
 # Connect to the db using SMITE.db.settings
@@ -67,17 +78,51 @@ SMITEDB.connect = (cb) ->
   SMITEDB.connection = Mongoose.createConnection SMITEDB.settings.url
   cb? SMITEDB.connection
 
-
-
 #──────────────────────────────────────────────────────
-# SMITE.db.dbModelFromBBModel
-# Connect to the db using SMI
+# SMITE.db.bbModelFromDBModel
 #──────────────────────────────────────────────────────
 
 SMITEDB.bbModelFromDBModel = (dbModel, BBModel, BBModelView) ->
+
+  # Move _id to id
   args = dbModel.toObject()
   args.id = args._id
   delete args._id
+
+  # Modify the args to map ObjectId to backbone model partials
+  # and to construct objects that require it (Date, custom types)
+  args = _mapMap args, (argsValue, attr) ->
+    attrType = BBModel.attributeTypes[attr]
+
+    # Null values map through
+    if argsValue == null
+      return null
+
+    # Pass through any types that aren't specified
+    # (the backbone model constructor will validate)
+    if not attrType
+      return argsValue
+
+    # Detect if backbone model is passed as string
+    if _.isString attrType
+      # Convert to full model
+      attrType = BBModel._model(attrType)
+
+    # Make a partial if it is a model type
+    if _isSMITEModelType attrType
+      if argsValue == null
+        return null
+      else
+        argsPartial = id: argsValue, _partial: true
+        return new attrType argsPartial
+
+    # Base types are pass through as is
+    else if attrType == Number or attrType == String or attrType == Boolean
+      return argsValue
+
+    # Constructed types are constructed from their JSON structure
+    else
+      return new attrType argsValue
 
   # Construct bb model
   bbModel = new BBModel args
@@ -87,8 +132,6 @@ SMITEDB.bbModelFromDBModel = (dbModel, BBModel, BBModelView) ->
     return new BBModelView bbModel
 
   bbModel
-
-  # TODO IMPORTANT: Convert ids to partials of the right type
 
 #──────────────────────────────────────────────────────
 # SMITE.db.model
@@ -100,13 +143,15 @@ SMITEDB.model = (bbModel) ->
 
   modelName = bbModel._modelName
   modelBaseName = bbModel._modelBaseName
+  modelParentName = bbModel._modelParentName
 
-  console.log 'modelName: ', modelName
-  console.log 'modelBaseName: ', modelBaseName
+  # console.log 'modelName: ', modelName
+  # console.log 'modelBaseName: ', modelBaseName
+  # console.log 'modelParentName: ', modelParentName
   BBModel = bbModel._model()
   BBBaseModel = bbModel._modelBase()
-  console.log 'BBmodel: ', BBModel
-  console.log 'BBBaseModel: ', BBBaseModel
+  # console.log 'BBmodel: ', BBModel
+  # console.log 'BBBaseModel: ', BBBaseModel
 
   # Succeed with model if it already has been made
   if SMITEDB.models[modelName]?
@@ -129,13 +174,14 @@ SMITEDB.model = (bbModel) ->
     # TODO: Support toUppercase, toLowercase
     # TODO: Support required
 
-  console.log 'modelDefinition: ', modelDefinition
+  # console.log 'modelDefinition: ', modelDefinition
   # Define schema
   SchemaNew = SMITEDB.schemas[modelName] = new Mongoose.Schema(
     modelDefinition
     strict: true
   )
 
+  # TODO add createAt and updateAt
   # SchemaNew.plugin(mongooseTimestamps)
 
   # Define model on this connection
@@ -160,16 +206,16 @@ SMITEDB.model = (bbModel) ->
 #──────────────────────────────────────────────────────
 
 SMITEDB.create = (bbModel, options) ->
-  console.log 'bbModel: ', bbModel
+  # console.log 'bbModel: ', bbModel
 
   # Get the DbModel
   DBModel = SMITEDB.model bbModel
 
-  console.log 'DBModel: ', DBModel
+  # console.log 'DBModel: ', DBModel
   # console.log 'DBModel.methods: ', DBModel.methods
 
   # Convert attributes to the format dbModel desires
-  console.log 'attributes before: ', bbModel.attributes
+  # console.log 'attributes before: ', bbModel.attributes
   attributes = _mapMap bbModel.attributes, (v, k) ->
 
     if _.isObject(v) and v.id
@@ -179,17 +225,17 @@ SMITEDB.create = (bbModel, options) ->
     v
 
   # console.log 'attributes previous: ', bbModel.attributes
-  console.log 'attributes after: ', attributes
+  # console.log 'attributes after: ', attributes
 
   # Construct mongoose schema
   dbModel = new DBModel attributes
 
-  console.log 'dbModel (before save): ', dbModel
+  # console.log 'dbModel (before save): ', dbModel
 
   # Save with mongoose
   dbModel.save (err, data) ->
-    console.log 'data (after save)': data
-    console.log 'dbModel (after save): ', dbModel
+    # console.log 'data (after save)': data
+    # console.log 'dbModel (after save): ', dbModel
 
     if err?
       return options.error?(err, 'error')
@@ -273,9 +319,3 @@ SMITEDB.create = (bbModel, options) ->
 
   #   fetch()
   #     model with id and query db and fill out
-
-  # SMITE.db.
-
-
-
-
