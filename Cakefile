@@ -4,6 +4,7 @@
 #───────────────────────────
 
 fs = require 'fs'
+path = require 'path'
 cp = require 'child_process'
 util = require 'util'
 _ = require 'underscore'
@@ -32,6 +33,21 @@ envFromObject = (obj) ->
   for k,v of obj
     out += "#{k}=#{v} "
   out
+
+# mkdir: make a directory if it doesn't exist (mkdir -p)
+mkdir = (dir, cb) ->
+  fs.stat dir, (err, stats) ->
+    if err?.code == 'ENOENT'
+      mkdir path.dirname(dir), (err) ->
+        if err
+          cb(err)
+        else
+          fs.mkdir dir, cb
+    else if stats.isDirectory
+      cb(null)
+    else
+      throw "mkdir: #{dir} is not a directory"
+      cb({code:"NotDir"})
 
 #───────────────────────────
 # Logging
@@ -110,7 +126,8 @@ task 'node', 'Launch node', (options) ->
 task 'db', 'Launch database', (options) ->
   mode = optionsMode options
   console.log 'mode is: ', mode
-  launch "mongod", ['--config', "db/config/#{mode}.conf"]
+  mkdir "db/data/#{mode}", ->
+    launch "mongod", ['--config', "db/config/#{mode}.conf"]
 
 task 'db:console', 'Launch db interactive console', (options) ->
   mode = optionsMode options
