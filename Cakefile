@@ -49,6 +49,28 @@ mkdir = (dir, cb) ->
       throw "mkdir: #{dir} is not a directory"
       cb({code:"NotDir"})
 
+nativeTrim = String.prototype.trim
+trim = (str, characters = '\\s') ->
+  if !str
+    return '';
+  if (arguments.length == 1) and nativeTrim
+    return nativeTrim.call str
+  String(str).replace(new RegExp('\^' + characters + '+|' + characters + '+$', 'g'), '')
+
+parseDBConfig = (path, cb) ->
+  fs.readFile path, 'utf8', (err, data) ->
+    if err
+      cb err, null
+    else
+      config = {}
+      lines = data.split "\n"
+      pattern = /\s*(\w+)\s*=\s*([^#]*)/i
+      for line in lines
+        match = line.match pattern
+        if match
+          config[match[1]] = trim match[2]
+      cb null, config
+
 #───────────────────────────
 # Logging
 #───────────────────────────
@@ -126,8 +148,12 @@ task 'node', 'Launch node', (options) ->
 task 'db', 'Launch database', (options) ->
   mode = optionsMode options
   console.log 'mode is: ', mode
-  mkdir "db/data/#{mode}", ->
-    launch "mongod", ['--config', "db/config/#{mode}.conf"]
+  parseDBConfig "db/config/#{mode}.conf", (err, config) ->
+    startDB = -> launch "mongod", ['--config', "db/config/#{mode}.conf"]
+    if config?.dbpath
+      mkdir config.dbpath, startDB
+     else
+       startDB()
 
 task 'db:console', 'Launch db interactive console', (options) ->
   mode = optionsMode options
