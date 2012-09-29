@@ -1,5 +1,5 @@
 module.exports = (SMITE) ->
-  describe 'SMITE.model (db-mongoose)', ->
+  describe 'SMITE.db-mongoose.model', ->
 
     TestUser = SMITE.models.TestUser
     users =
@@ -25,7 +25,7 @@ module.exports = (SMITE) ->
             done_()
 
     afterEach (done) ->
-      SMITE.db.clear modelNameUser, done
+      SMITE.db.drop modelNameUser, done
       models = {}
 
     it 'query (Model)', (done) ->

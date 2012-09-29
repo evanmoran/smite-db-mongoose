@@ -44,19 +44,19 @@ SMITE.db.connect = (cb) ->
   SMITE.db.connection = Mongoose.createConnection SMITE.db.settings.url
   cb? null, SMITE.db.connection
 
-# SMITE.db.clear
+# SMITE.db.drop
 # ----------------------------------------------------------------
-# Clear the database
+# Drop the database
 
-SMITE.db.clear = (modelName, cb = ->) ->
-  typo 'db.clear: expected one or two arguments',
+SMITE.db.drop = (modelName, cb = ->) ->
+  typo 'db.drop: expected one or two arguments',
 
-  throw 'db.clear: expected one or two arguments' unless (arguments.length == 1) or (arguments.length == 2)
-  throw 'db.clear: String expected for first argument (modelName)' unless _.isString modelName
-  throw 'db.clear: Function expected for second argument (cb)' unless _.isFunction cb
+  throw 'db.drop: expected one or two arguments' unless (arguments.length == 1) or (arguments.length == 2)
+  throw 'db.drop: String expected for first argument (modelName)' unless _.isString modelName
+  throw 'db.drop: Function expected for second argument (cb)' unless _.isFunction cb
 
   Model = SMITE.db.model modelName
-  return cb('db.clear: model name not found') unless Model?
+  return cb('db.drop: model name not found') unless Model?
 
   # Delete the collection
   Model.remove {}, cb
