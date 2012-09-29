@@ -27,7 +27,6 @@ SMITE.db.use = (_SMITE, settings = {}) ->
     host: 'localhost'
     port: 4000
     database: 'database'
-
   if not settings.url?
     settings.url = "mongodb://#{settings.host}:#{settings.port}/#{settings.database}"
 
@@ -145,7 +144,6 @@ SMITE.db.model = (modelName) ->
 # ----------------------------------------------------------------
 
 SMITE.db.create = (modelName, modelData, cb) ->
-
   SMITE.throw 'db.create: expected three arguments' unless arguments.length == 3
   SMITE.throw 'db.create: first argument expected String (modelName)' unless _.isString(modelName) and modelName != ''
   SMITE.throw 'db.create: second argument expected Object (modelData)' unless  _.isObject(modelData)

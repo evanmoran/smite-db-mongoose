@@ -19,7 +19,7 @@ SMITE = require './app/src/app.coffee'
 
 TestUser = SMITE.models.TestUser
 
-describe 'SMITE.db-mongoose', ->
+describe 'SMITE.db (db-mongoose)', ->
 
   users =
     Evan: name: 'Evan', height: 3, password: 'evanpassword', male: true
@@ -54,10 +54,6 @@ describe 'SMITE.db-mongoose', ->
     SMITE.db.connect (err, data) ->
       SMITE.db.connection.should.be.an 'object'
       done()
-
-  it 'clear', ->
-    SMITE.db.clear.should.be.a 'function'
-    # SMITE.db.clear('User')
 
   it 'create', ->
     # Verify beforeEach created them right
@@ -163,9 +159,4 @@ describe 'SMITE.db-mongoose', ->
       (shared.sortBy result, 'name').should.deep.equal shared.sortBy(expected, 'name')
       done()
 
-  it 'query on models', (done) ->
-    expected = [models.Evan, models.Sarah, models.Laura]
-    TestUser.query height: '<=': 3, (err, cursor) ->
-      result = cursor.toArray()
-      (shared.sortBy result, 'name').should.deep.equal shared.sortBy(expected, 'name')
-      done()
+require('./SMITE.model')(SMITE)
