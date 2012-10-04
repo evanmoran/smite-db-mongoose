@@ -80,7 +80,7 @@ SMITE.db._dbJsonFromBBJson = (jsonBB) ->
   jsonDB = _.clone jsonBB
   # id should be a hex number
   if jsonDB.id?
-    jsonDB._id = SMITE.db._dbIDFromBBID jsonDB._id
+    jsonDB._id = SMITE.db._dbIDFromBBID jsonDB.id
     # no .id field
     delete jsonDB.id
   jsonDB
@@ -149,6 +149,9 @@ SMITE.db.create = (modelName, modelData, cb) ->
   SMITE.throw 'db.create: second argument expected Object (modelData)' unless  _.isObject(modelData)
   SMITE.throw 'db.create: third argument expected Function (cb)' unless  _.isFunction(cb)
 
+  # Convert model data json
+  modelData = modelData.toJSON() if _.isFunction modelData.toJSON
+
   # Get or create the schema
   DBModel = SMITE.db.model modelName
   return cb('db.create: db schema could not be found') unless DBModel?
@@ -190,11 +193,16 @@ SMITE.db.update = (modelName, modelId, modelData, cb = ->) ->
   SMITE.throw 'db.update: third argument expected Object (modelData)' unless  _.isObject(modelData)
   SMITE.throw 'db.update: fourth argument expected Function (cb)' unless  _.isFunction(cb)
 
+  # Convert model data json
+  modelData = modelData.toJSON() if _.isFunction modelData.toJSON
+
   DBModel = SMITE.db.model modelName
   return cb('db.create: db schema could not be found') unless DBModel?
 
   # Find and update it
   dbModelData = SMITE.db._dbJsonFromBBJson modelData
+  delete dbModelData._id
+
   DBModel.findByIdAndUpdate modelId, dbModelData, (err, data) ->
     return cb("db.update: record not found (#{modelName}.#{modelId})\n#{err}") if err
 
